@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.awt.*;
 
 public class Card {
@@ -11,11 +12,11 @@ public class Card {
     private final boolean is_prize ;
     private boolean is_bought = false;
     private boolean is_reserved = false;
-    private Image image;
+    private ImageIcon image;
 
     // Constructor
 
-    public Card( Coin[] rcoins , int cardscore , Image image) {
+    public Card( Coin[] rcoins , int cardscore , ImageIcon image) {
 
         this.rcoins = rcoins;
         this.cardscore = Checkvalidscore( cardscore );
@@ -24,7 +25,7 @@ public class Card {
         this.scoin = null;
 
     }
-    public Card( Coin scoin , Coin[] rcoins , int cardscore , Image image) {
+    public Card( Coin scoin , Coin[] rcoins , int cardscore , ImageIcon image) {
 
         this.scoin = scoin;
         this.rcoins = rcoins;
@@ -36,25 +37,60 @@ public class Card {
 
     // Methods
 
-    private boolean Buy( Coin[] playercoins , Player player) {
+    private boolean Buy( Coin[] playercoins , Player player ,SlotMachine slots) {
 
-        if( CheckValidCoins( playercoins ) ){
+        if( CheckValidCoins( playercoins , false , slots) && player.getPurchasedcards() < 16) {
 
+                CheckValidCoins( playercoins , true , slots);
+                player.setPurchasedcards( player.getPurchasedcards() + 1);
+                player.setCard( this );
+                setPlayer( player );
+
+                return true;
+        } else {
+
+            return false;
         }
     }
 
-    private boolean CheckValidCoins ( Coin[] coins) {
+    private boolean CheckValidCoins ( Coin[] pcoins , boolean remove , SlotMachine slots) {
 
-        for( Coin coin : coins) {
 
+        for (int i = 0 ; i < rcoins.length ; i++) {
+            boolean found = false;
+
+            for ( Coin coin : pcoins) {
+
+                if ( coin.getColor().equals( rcoins[i].getColor() ) || coin.getIs_gold() ) {
+
+                    // Remove or Put Coin In Slot Mchine
+                    if( remove ) {
+
+                        SlotMachine slot = slots.Findslotnachine(coin.getColor());
+                        if( slot.getnumcoins() < 4){
+                            slots.setnumcoins( slot.getnumcoins() + 1 );
+                            coin = null;
+                        } else {
+                            coin = null;
+                        }
+                    }
+
+                    found = true;
+                    break;
+                }
+            }
+            if (!found ){
+                return false;
+            }
         }
+        return true;
     }
 
     private int Checkvalidscore( int cardscore ) {
         return  cardscore >= 0 ? cardscore : 0;
     }
 
-    private Image Checkvalidimage ( Image image) {
+    private ImageIcon Checkvalidimage ( ImageIcon image) {
         if ( image != null) {
             return image;
         }else {
@@ -74,7 +110,7 @@ public class Card {
         }
     }
 
-    private void setImage ( Image image) {
+    private void setImage ( ImageIcon image) {
 
         if ( image == null) {
             this.image = image;
@@ -97,7 +133,7 @@ public class Card {
         return cardscore;
     }
 
-    public Image getImage() {
+    public ImageIcon getImage() {
         return this.image != null ? this.image : null;
     }
 }

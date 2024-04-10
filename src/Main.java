@@ -27,6 +27,10 @@ public class Main extends JFrame {
     List<File> images = new ArrayList<>();
 
     Card[] cards = new Card[48];
+    static SlotMachine[] slots = new SlotMachine[5];
+
+    Player player1 = new Player();
+    Player player2 = new Player();
 
     public Main() {
 
@@ -38,6 +42,7 @@ public class Main extends JFrame {
 
         // Load Image
         ImageLoader();
+        SlotMachineLoader();
 
         initLeftpnl();
         initCenterpnl();
@@ -420,29 +425,65 @@ public class Main extends JFrame {
         }
 
     }
+
+    private void SlotMachineLoader() {
+
+        for (int i = 0 ; i < 5 ; i++) {
+            slots[i] = new SlotMachine( images.get( images.size()-i-1 ).getName() ,
+                    new ImageIcon( images.get( images.size()-i-1).getAbsolutePath())
+            );
+        }
+    }
     private void ImageLoader() {
 
-        for(int i = 0 ; i < 7 ; i++){
+        int index = 0;
+        for(int n = 0 ; n < 7 ; n++){
 
-            File folder = new File(cardpath+i);
+            File folder = new File(cardpath + n);
 
             for ( File image : folder.listFiles()) {
+
+                if ( n < 4) {
+                    try {
+                        String[] parts = image.getName().split("\\.");
+
+                        cards[ index ] = Cardgenerator( Integer.parseInt(parts[1]) ,
+                                Integer.parseInt(parts[2]) ,
+                                parts[3] ,
+                                Integer.parseInt(parts[4]) ,
+                                parts[5],
+                                parts[6],
+                                new ImageIcon( image.getAbsolutePath() )
+                        );
+
+                        index++;
+                    }    catch (NumberFormatException e) {
+
+                    }
+
+                }
 
                 images.add(image);
             }
         }
     }
 
-    private void CardLoader () {
+    private Card Cardgenerator ( int score , int numberofcoin1 , String firstcolor , int numberbofcoin2 ,String secondcolor , String scoin , ImageIcon image ) {
 
-        int cardcount = 48;
+        Coin[] rcoins = new Coin[ numberofcoin1 + numberbofcoin2 ];
 
-        for( int i = 0 ; i < cardcount ; i++) {
-            cards[0] = new Card()
+        Coin specialcoin = new Coin( scoin , true , null);
+
+        for ( int i = 0 ; i < numberofcoin1 + numberbofcoin2 ; i++ ) {
+            rcoins[i] = new Coin( firstcolor , false , null);
         }
-    }
-    private Coin Coingenerator ( String color , boolean is_special , boolean is_gold , Image image ) {
 
-        return  new Coin( color , is_special , is_gold , image );
+        return new Card( specialcoin , rcoins , score , image);
+    }
+
+    // unable to use
+    private Coin Coingenerator ( String color , boolean is_special , ImageIcon image ) {
+
+        return  new Coin( color , is_special , image );
     }
 }

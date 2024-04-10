@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.awt.*;
 
 public class Coin {
@@ -5,24 +6,25 @@ public class Coin {
     private final String color ;
     private final boolean is_special;
     private final boolean is_gold;
-
     private Player owner ;
 
-    private final Image image;
+    private final ImageIcon image;
 
     // Constructor
-    public Coin ( String color , boolean is_special , boolean is_gold , Image image ) {
+    public Coin ( String color , boolean is_special , ImageIcon image ) {
 
         this.color = CheckValidColor( color );
         this.is_special = is_special;
-        this.is_gold = is_gold;
+        this.is_gold = CheckIsGold( color );
         this.image = CheckValidImage( image );
     }
 
     // Methods
 
-
-    private Image CheckValidImage ( Image image ) {
+    private boolean CheckIsGold ( String color) {
+        return color.equals( "gold" ) ? true : false;
+    }
+    private ImageIcon CheckValidImage ( ImageIcon image ) {
             return image != null ? image : null;
     }
 
@@ -55,5 +57,9 @@ public class Coin {
 
     public boolean getIs_gold (){
         return is_gold;
+    }
+
+    public  String getColor () {
+        return this.color;
     }
 }
