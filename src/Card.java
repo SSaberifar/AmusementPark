@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 public class Card {
 
@@ -9,76 +10,135 @@ public class Card {
     private final Coin[] rcoins;
     private Player owner;
     private final int cardscore ;
-    private final boolean is_prize ;
+    private boolean is_prize  = false;
     private boolean is_bought = false;
     private boolean is_reserved = false;
+    private int id ;
+
     private ImageIcon image;
+
+    private static int goldcoins = 5;
 
     // Constructor
 
-    public Card( Coin[] rcoins , int cardscore , ImageIcon image) {
+    public Card( Coin[] rcoins , int cardscore , ImageIcon image , int id) {
 
         this.rcoins = rcoins;
         this.cardscore = Checkvalidscore( cardscore );
         this.image = Checkvalidimage( image );
         this.is_prize = true;
         this.scoin = null;
-
+        this.id = id;
     }
-    public Card( Coin scoin , Coin[] rcoins , int cardscore , ImageIcon image) {
+    public Card( Coin scoin , Coin[] rcoins , int cardscore , ImageIcon image , int id) {
 
         this.scoin = scoin;
         this.rcoins = rcoins;
         this.cardscore = Checkvalidscore( cardscore );
         this.image = Checkvalidimage( image );
         this.is_prize = false;
+        this.id = id;
 
     }
 
     // Methods
 
-    private boolean Buy( Coin[] playercoins , Player player ,SlotMachine slots) {
+     synchronized void Reserve ( Player player) {
 
-        if( CheckValidCoins( playercoins , false , slots) && player.getPurchasedcards() < 16) {
+        if ( player.getReservedcard() < 3 ) {
 
-                CheckValidCoins( playercoins , true , slots);
-                player.setPurchasedcards( player.getPurchasedcards() + 1);
-                player.setCard( this );
-                setPlayer( player );
+            setPlayer( player );
+            this.is_reserved = true;
 
-                return true;
+            // Add Gold Coin
+            if ( getGoldcoins() > 0 ){
+                player.setScoins( Coin.Coingenerator( "gold" , false , null));
+                setgoldnumber( goldcoins - 1);
+            }
+            player.setReservedcard( player.getReservedcard() +1);
+
         } else {
+            String msg = " You Can't Reserve More Card!";
+            JOptionPane.showMessageDialog(null,msg, "Massage",JOptionPane.PLAIN_MESSAGE);
 
-            return false;
         }
     }
 
-    private boolean CheckValidCoins ( Coin[] pcoins , boolean remove , SlotMachine slots) {
+     synchronized void Buy( Player player ) {
 
+        if( CheckValidCoins( player.getBcoins() , player.getScoin(),false ) && player.getPurchasedcards() < 16) {
+
+                CheckValidCoins( player.getBcoins(), player.getScoin() , true );
+                player.setCard( this );
+                player.setPurchasedcards( player.getPurchasedcards() + 1);
+                setPlayer( player );
+                this.is_bought = true;
+
+        } else {
+
+            String msg = " You Don't Have Enough Coins!";
+            JOptionPane.showMessageDialog(null,msg,"Error",JOptionPane.PLAIN_MESSAGE);
+        }
+    }
+
+
+    private boolean CheckValidCoins ( Coin[] bcoins , Coin[] scoins, boolean remove ) {
 
         for (int i = 0 ; i < rcoins.length ; i++) {
             boolean found = false;
 
-            for ( Coin coin : pcoins) {
+            // Search In Special Coins
+            if ( scoins[0] != null) {
+                for ( Coin coin : scoins){
+                    if ( coin != null && coin.getColor().equals( rcoins[i].getColor() ) ) {
 
-                if ( coin.getColor().equals( rcoins[i].getColor() ) || coin.getIs_gold() ) {
-
-                    // Remove or Put Coin In Slot Mchine
-                    if( remove ) {
-
-                        SlotMachine slot = slots.Findslotnachine(coin.getColor());
-                        if( slot.getnumcoins() < 4){
-                            slots.setnumcoins( slot.getnumcoins() + 1 );
-                            coin = null;
-                        } else {
-                            coin = null;
+                        found = true;
+                        break;
+                        // It's Repetitive Coin
+                    }
+                    else  {
+                        if ( coin != null && coin.getColor().equals( "gold" )) {
+                            if ( remove ) {
+                                coin = null;
+                            }
+                            found = true;
                         }
                     }
-
-                    found = true;
-                    break;
                 }
+
+            } else { // Search In Basic Coins
+                if (!is_prize){
+                    for ( Coin coin : bcoins) {
+
+                        if ( coin != null && coin.getColor().equals( rcoins[i].getColor() ) ) {
+
+                            // Remove or Put Coin In Slot Mchine
+                            if( remove ) {
+
+                                SlotMachine slot = SlotMachine.Findslotnachine( coin.getColor());
+                                // Show Error If There Isn't Any Slot Machine
+                                if (slot == null){
+                                    String msg = " There Is Not Slot Machine !";
+                                    JOptionPane.showMessageDialog(null ,msg,"Error",JOptionPane.PLAIN_MESSAGE);
+                                }
+
+                                if( slot != null && slot.getnumcoins() < 4) {
+                                    slot.setnumcoins( slot.getnumcoins() + 1 );
+                                    coin = null;
+                                } else {
+                                    coin = null;
+                                }
+                            }
+
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
             }
+
+            // Return False If Not Found any Coin
             if (!found ){
                 return false;
             }
@@ -97,6 +157,8 @@ public class Card {
             return null;
         }
     }
+
+
     // Setter
 
     private void setPlayer ( Player owner) {
@@ -117,7 +179,12 @@ public class Card {
         }
     }
 
+    private static void setgoldnumber( int number) {
 
+        if ( number >= 0 && number <= 5) {
+            goldcoins = number;
+        }
+    }
 
     // Getter
 
@@ -135,5 +202,15 @@ public class Card {
 
     public ImageIcon getImage() {
         return this.image != null ? this.image : null;
+    }
+    public int getId() {
+        return this.id;
+    }
+    public boolean getisreserve(){
+        return this.is_reserved;
+    }
+
+    public static int getGoldcoins() {
+        return goldcoins;
     }
 }

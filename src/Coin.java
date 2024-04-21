@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 public class Coin {
 
@@ -21,16 +22,31 @@ public class Coin {
 
     // Methods
 
+    static Coin Coingenerator ( String color , boolean is_special , ImageIcon image ) {
+
+        return  new Coin( color , is_special , image );
+    }
+
+    static boolean Removecoin ( String color , List<Coin> scoins) {
+
+        for ( int i = 0 ; i < scoins.size() ; i++) {
+            if ( scoins.get( i ).getColor().equals( color )) {
+                scoins.remove( i );
+                return true;
+            }
+        }
+        return false;
+    }
     private boolean CheckIsGold ( String color) {
-        return color.equals( "gold" ) ? true : false;
+        return color.equals( "gold" );
     }
     private ImageIcon CheckValidImage ( ImageIcon image ) {
-            return image != null ? image : null;
+            return image;
     }
 
     private String CheckValidColor ( String color) {
 
-        if( color == "black" || color == "blue" || color == "green" || color == "red" || color == "white") {
+        if( color.equals("black") || color.equals("blue") || color.equals("green") || color.equals("red") || color.equals("white") ) {
             return color;
         }
         else {
@@ -61,5 +77,8 @@ public class Coin {
 
     public  String getColor () {
         return this.color;
+    }
+    ImageIcon getImage(){
+        return this.image;
     }
 }
